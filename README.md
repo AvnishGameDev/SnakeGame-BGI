@@ -1,6 +1,7 @@
 # Snake Game - BGI
 
 Basic Snake Game made with Borland Graphics Interface and C
+
 The full game source is in main.c
 
 ## How to Run
