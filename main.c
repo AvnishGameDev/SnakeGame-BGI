@@ -3,8 +3,6 @@
 #include <stdlib.h>
 #include <math.h>
 
-#pragma region GlobalDefinations
-
 #define LEFT 75
 #define RIGHT 77
 #define UP 72
@@ -15,21 +13,20 @@
 // Target Frames Per Second of the Game (Targeting 4 FPS for simplicity)
 #define FPS 4
 
-// Map stepping size in pixels
+// Draw stepping size in pixels
 #define MAP_STEP 32
 
-// Map X limit
-#define MAP_X 20
+// Screen X limit
+#define MAP_X 20 // 640
 
-// Map Y limit
-#define MAP_Y 15
+// Screen Y limit
+#define MAP_Y 15 // 480
 
 // Convert map location to screen location
 #define COORD(x) x * MAP_STEP
 
 // Starting score
 #define STARTING_SCORE 0
-#pragma endregion
 
 // Get random int in Range from 0 to max
 int randomInRange(int max)
@@ -37,7 +34,6 @@ int randomInRange(int max)
 	return (rand() % max);
 }
 
-#pragma region Vec2
 // Vector of two numbers
 typedef struct Vec2
 {
@@ -48,13 +44,8 @@ int isEqual(Vec2 a, Vec2 b)
 {
 	return a.x == b.x && a.y == b.y;
 }
-#pragma endregion
 
-/** Draw rectangle on screen
- * @param location location of the rectangle on the map
- * @param border color of the border
- * @param fill fill color of the rectangle
- */
+// Draw Rectangle on screen
 void DrawRectangle(Vec2 location, int border, int fill)
 {
 	setcolor(border);
@@ -63,22 +54,15 @@ void DrawRectangle(Vec2 location, int border, int fill)
 	floodfill(COORD(location.x)+16, COORD(location.y)+16, border);
 }
 
-#pragma region SnakeBodyPart
-// Linked list node
 typedef struct SnakeBodyPart
 {
-	// Border color of the body part
 	int border;
-	// Fill color of the body part
 	int fill;
 
-	// Current Location of the body part in map space
 	Vec2 location;
 
-	// Next Location to move to (set by the previous node) in map space
 	Vec2 nextLocation;
 
-	// Next node
 	struct SnakeBodyPart* nextPart;
 } SnakeBodyPart;
 
@@ -108,37 +92,21 @@ void SnakeBodyPart_Destroy(SnakeBodyPart* p)
 	}
 }
 
-#pragma endregion
-
-#pragma region Snake
-// Snake object
 typedef struct Snake
 {
-	// Velocity of the snake in map space
 	Vec2 velocity;
 
-	// Linked list for SnakeBodyParts
 	SnakeBodyPart* head;
 	SnakeBodyPart* tail;
 
-	// No of body parts, also the score
 	int noOfParts;
 
-	// int counter for number of parts that are to be added in update()
 	int partsToAdd;
 
-	// Previous movement direction
 	int prevDir;
 } Snake;
 
-/** Set the direction of snake movement
- * @param dir new direction to set to \n
- * 1 - Left \n
- * 2 - Down \n
- * 3 - Right \n
- * 4 - Up \n
- * Note: direction can't be set to opposite direction of current direction
- */
+// Change Direction
 void Snake_SetDirection(Snake* s, int dir)
 {
 	// If new direction opposite to current direction, return.
@@ -227,16 +195,11 @@ void Snake_Destroy(Snake* s)
 	SnakeBodyPart_Destroy(s->head);
 	free(s->head);
 }
-#pragma endregion
 
-#pragma region Apple
-// Apple object
 typedef struct Apple
 {
-	// Color of the Apple
 	int color;
 	
-	// Current location of the Apple in map space
 	Vec2 location;
 } Apple;
 
@@ -254,14 +217,12 @@ void Apple_RandomizeLocation(Apple* a)
 	a->location.y = randomInRange(MAP_Y);
 }
 
-#pragma endregion
-
 int MainMenu()
 {
 	int ch;
 	
 	while (kbhit()) 
-		getch(); // Read and discard each character in the input buffer
+		getch(); // clear input
 	ch = 0;
 	while (1)
 	{
@@ -283,26 +244,30 @@ int MainMenu()
 				ch = 2;
 		}
 
+		settextjustify(CENTER_TEXT, CENTER_TEXT);
+		settextstyle(7, 0, 7);
+		setcolor(GREEN);
+		outtextxy(320, 40, "Snake Game");
 		settextjustify(LEFT_TEXT, TOP_TEXT);
-		settextstyle(BOLD_FONT, 0, 6);
+		settextstyle(3, 0, 5);
 		setcolor(YELLOW);
-		outtextxy(100, 100, "Start");
+		outtextxy(100, 150, "Start");
 		setcolor(BLUE);
-		outtextxy(100, 200, "About");
+		outtextxy(100, 250, "About");
 		setcolor(RED);
-		outtextxy(100, 300, "Exit");
+		outtextxy(100, 350, "Exit");
 
 		setcolor(GREEN);
 		switch (ch)
 		{
 		case 0:
-			rectangle(100, 100, 260, 150);
+			rectangle(90, 150, 210, 200);
 			break;
 		case 1:
-			rectangle(100, 200, 250, 250);
+			rectangle(90, 250, 224, 300);
 			break;
 		case 2:
-			rectangle(100, 300, 220, 350);
+			rectangle(90, 350, 170, 400);
 			break;
 		}
 		setcolor(WHITE);
@@ -315,22 +280,33 @@ int MainMenu()
 void AboutMenu()
 {
 	while (kbhit()) 
-		getch(); // Read and discard each character in the input buffer
+		getch(); // clear input
 
 	settextjustify(CENTER_TEXT, CENTER_TEXT);
-	settextstyle(BOLD_FONT, 0, 4);
+	settextstyle(7, 0, 4);
 	setcolor(YELLOW);
-	outtextxy(320, 40, "Microproject SYCO");
-	settextstyle(BOLD_FONT, 0, 2);
+	outtextxy(320, 40, "Snake Game Microproject SYCO");
+	settextstyle(3, 0, 2);
 	settextjustify(LEFT_TEXT, CENTER_TEXT);
 	setcolor(GREEN);
-	outtextxy(10, 200, "Made by");
-	outtextxy(460, 200, "RollNo");
+	outtextxy(10, 150, "Made by");
+	outtextxy(460, 150, "RollNo");
 	setcolor(LIGHTBLUE);
-	outtextxy(10, 240, "1. Avnish Kirnalli");
-	outtextxy(460, 240, "92");
-	setcolor(GREEN);
+	outtextxy(10, 190, "1. Avnish Kirnalli");
+	outtextxy(460, 190, "92");
+	outtextxy(10, 230, "2. ");
+	outtextxy(460, 230, "00");
+	outtextxy(10, 270, "3. ");
+	outtextxy(460, 270, "00");
+	outtextxy(10, 310, "4. ");
+	outtextxy(460, 310, "00");
 
+	settextstyle(3, 0, 2);
+	setcolor(YELLOW);
+	settextjustify(CENTER_TEXT, CENTER_TEXT);
+	outtextxy(320, 460, "Press any key to return");
+
+	settextjustify(LEFT_TEXT, CENTER_TEXT);
 	setcolor(WHITE);
 	while (!kbhit());
 }
@@ -341,7 +317,7 @@ int main()
 	Snake snake;
 	Apple apple;
 
-	// GameOver flag, 0 = running, 1 = gameover
+	// GameOver, 0 = running, 1 = gameover
 	int gameover = 0;
 	
 	int i;
@@ -356,9 +332,10 @@ int main()
 	char creditTxt[] = "Made by Avnish Kirnalli.";
 
 	int score;
-	
-	// Create window
-	initwindow(640, 480, "Snake Game");
+
+	int gd = DETECT, gm;
+	initgraph(&gd, &gm, "C:\\TURBOC3\\BGI");
+	setgraphmode(VGAHI);
 
 	MainMenu:
 	MenuCh = MainMenu();
@@ -369,8 +346,6 @@ int main()
 	}
 	else if(MenuCh == 2)
 		return 0;
-	
-	/** Drawing **/
 
 	// Initialize Snake and Apple
 	Snake_Initialize(&snake);
@@ -384,16 +359,14 @@ int main()
 	// Main application loop
 	while (!gameover)
 	{
-		// Clear window
+		// Clear graph
 		cleardevice();
-		
-		/** INPUT **/
 		
 		// Movement Input
 		if (kbhit())
 		{
 			getch();
-			c = getch();
+			c = getch(); // get pressed key
 
 			// Movement Input
 			if (c == UP)
@@ -410,19 +383,17 @@ int main()
 				break;
 		}
 
-		/** UPDATE **/
-
 		Snake_Update(&snake);
 
-		// Check If Snake's colliding with Apple
+		// Check If Snake is on top of Apple (both location should be same)
 		if (isEqual(snake.head->location, apple.location))
 		{
-			// On player score increase
+			// Increase player score
 			Snake_AddPart(&snake); // Add part
-			Apple_RandomizeLocation(&apple); // Set Apple to other Random location
+			Apple_RandomizeLocation(&apple); // Set Apple to another Random location
 		}
 
-		// Check if Snake out of Map bounds and bring back from opposite side
+		// Check if Snake out of Screen bounds and bring back from opposite side
 		if (snake.head->nextLocation.x > MAP_X)
 			snake.head->nextLocation.x = 0;
 		if (snake.head->nextLocation.y > MAP_Y)
@@ -432,7 +403,7 @@ int main()
 		if (snake.head->nextLocation.y < 0)
 			snake.head->nextLocation.y = MAP_Y;
 
-		// Check if Snake head colliding with any body part
+		// Check if Snake head is overlapping with any body part
 		p = snake.head->nextPart;
 		while (p)
 		{
@@ -445,18 +416,16 @@ int main()
 			p = p->nextPart;
 		}
 
-		/** DRAW **/
+		// Draw on screen
 		Snake_Draw(&snake);
 		Apple_Draw(&apple);
 
 		// Points text
 		setcolor(LIGHTBLUE);
-		settextstyle(BOLD_FONT, 0, 12);
+		settextstyle(3, 0, 2);
 		itoa(snake.noOfParts, pointsStr+8, 10);
-		//snprintf(pointsStr, 32, "Points: %d", snake.noOfParts);
 		outtext(pointsStr);
 
-		// Targeting 2 FPS for simplicity
 		delay(1000/FPS);
 	}
 
@@ -469,41 +438,38 @@ int main()
 	// Clear window
 	cleardevice();
 
-	// If exited on demand, exit directly.
+	// If exited by pressing escape, exit directly.
 	if (!gameover)
 		return 1;
 		
 	// Game Over text
 	setcolor(YELLOW);
-	settextstyle(BOLD_FONT, 0, 8);
+	settextstyle(10, 0, 6);
 	settextjustify(CENTER_TEXT, CENTER_TEXT);
-	outtextxy(MAP_STEP*MAP_X/2, MAP_STEP*MAP_Y/2, gameOverTxt);
+	outtextxy(MAP_STEP*MAP_X/2, MAP_STEP*MAP_Y/2-50, gameOverTxt);
 
 	// Score text
 	itoa(score, scoreTxt+18, 10);
-	//snprintf(scoreTxt, 32, "Your Final score: %d", score);
-	settextstyle(BOLD_FONT, 0, 2);
+	settextstyle(3, 0, 2);
 	settextjustify(CENTER_TEXT, CENTER_TEXT);
 	outtextxy(MAP_STEP*MAP_X/2, MAP_STEP*MAP_Y/2+MAP_STEP, scoreTxt);
 
 	// Press any key to exit text
 	setcolor(GREEN);
-	settextstyle(BOLD_FONT, 0, 2);
+	settextstyle(3, 0, 2);
 	settextjustify(CENTER_TEXT, BOTTOM_TEXT);
 	outtextxy(MAP_STEP*MAP_X/2, MAP_STEP*MAP_Y-MAP_STEP, exitTxt);
 
 	// Credits text
 	setcolor(LIGHTBLUE);
-	settextstyle(BOLD_FONT, 0, 2);
+	settextstyle(3, 0, 1);
 	settextjustify(RIGHT_TEXT, BOTTOM_TEXT);
 	outtextxy(MAP_STEP*MAP_X, MAP_STEP, creditTxt);
 
 	while (kbhit()) 
-	{
-		getch(); // Read and discard each character in the input buffer
-	}
+		getch(); // clear input
 
-	while (!kbhit()); // Wait till user presses a key
+	getch(); // hold final screen until a key is pressed
 
-	goto MainMenu;
+	goto MainMenu; // go back to main menu
 }
