@@ -4,6 +4,14 @@
 #include <math.h>
 
 #pragma region GlobalDefinations
+
+#define LEFT 75
+#define RIGHT 77
+#define UP 72
+#define DOWN 80
+#define ENTER 13
+#define ESC 27
+
 // Target Frames Per Second of the Game (Targeting 4 FPS for simplicity)
 #define FPS 4
 
@@ -11,10 +19,10 @@
 #define MAP_STEP 32
 
 // Map X limit
-#define MAP_X 32
+#define MAP_X 20
 
 // Map Y limit
-#define MAP_Y 16
+#define MAP_Y 15
 
 // Convert map location to screen location
 #define COORD(x) x * MAP_STEP
@@ -248,28 +256,132 @@ void Apple_RandomizeLocation(Apple* a)
 
 #pragma endregion
 
+int MainMenu()
+{
+	int ch;
+	
+	while (kbhit()) 
+		getch(); // Read and discard each character in the input buffer
+	ch = 0;
+	while (1)
+	{
+		cleardevice();
+		if (kbhit())
+		{
+			int keyCode = getch();
+			if (keyCode == ENTER)
+				break;
+			
+			if (keyCode == DOWN)
+				ch++;
+			else if (keyCode == UP)
+				ch--;
+
+			if (ch > 2)
+				ch = 0;
+			else if(ch < 0)
+				ch = 2;
+		}
+
+		settextjustify(LEFT_TEXT, TOP_TEXT);
+		settextstyle(BOLD_FONT, 0, 6);
+		setcolor(YELLOW);
+		outtextxy(100, 100, "Start");
+		setcolor(BLUE);
+		outtextxy(100, 200, "About");
+		setcolor(RED);
+		outtextxy(100, 300, "Exit");
+
+		setcolor(GREEN);
+		switch (ch)
+		{
+		case 0:
+			rectangle(100, 100, 260, 150);
+			break;
+		case 1:
+			rectangle(100, 200, 250, 250);
+			break;
+		case 2:
+			rectangle(100, 300, 220, 350);
+			break;
+		}
+		setcolor(WHITE);
+		delay(60);
+	}
+
+	return ch;
+}
+
+void AboutMenu()
+{
+	while (kbhit()) 
+		getch(); // Read and discard each character in the input buffer
+
+	settextjustify(CENTER_TEXT, CENTER_TEXT);
+	settextstyle(BOLD_FONT, 0, 4);
+	setcolor(YELLOW);
+	outtextxy(320, 40, "Microproject SYCO");
+	settextstyle(BOLD_FONT, 0, 2);
+	settextjustify(LEFT_TEXT, CENTER_TEXT);
+	setcolor(GREEN);
+	outtextxy(10, 200, "Made by");
+	outtextxy(460, 200, "RollNo");
+	setcolor(LIGHTBLUE);
+	outtextxy(10, 240, "1. Avnish Kirnalli");
+	outtextxy(460, 240, "92");
+	setcolor(GREEN);
+
+	setcolor(WHITE);
+	while (!kbhit());
+}
+
 int main()
 {
-	// Create window
-	initwindow(MAP_X * MAP_STEP, MAP_Y * MAP_STEP, "Snake Game");
+	int MenuCh;
+	Snake snake;
+	Apple apple;
 
+	// GameOver flag, 0 = running, 1 = gameover
+	int gameover = 0;
+	
+	int i;
+	char c;
+
+	SnakeBodyPart* p;
+
+	char pointsStr[32] = "Points: ";
+	char gameOverTxt[] = "Game Over!";
+	char scoreTxt[32] = "Your Final score: ";
+	char exitTxt[] = "Press any key to return to Main Menu";
+	char creditTxt[] = "Made by Avnish Kirnalli.";
+
+	int score;
+	
+	// Create window
+	initwindow(640, 480, "Snake Game");
+
+	MainMenu:
+	MenuCh = MainMenu();
+	if (MenuCh == 1)
+	{
+		AboutMenu();
+		goto MainMenu;
+	}
+	else if(MenuCh == 2)
+		return 0;
+	
 	/** Drawing **/
 
 	// Initialize Snake and Apple
-	Snake snake;
 	Snake_Initialize(&snake);
-	Apple apple;
 	apple.color = LIGHTRED;
 	Apple_RandomizeLocation(&apple);
 
-	// GameOver flag, 0 = running, 1 = gameover
-	int gameover{0};
-
 	// Add starting score (if any)
-	for (int i = 0; i < STARTING_SCORE; i ++)
+	for (i = 0; i < STARTING_SCORE; i ++)
 		Snake_AddPart(&snake);
 
-	// Main game loop
+	// Main application loop
 	while (!gameover)
 	{
 		// Clear window
@@ -280,20 +392,21 @@ int main()
 		// Movement Input
 		if (kbhit())
 		{
-			char c = getch();
+			getch();
+			c = getch();
 
 			// Movement Input
-			if (c == 'w' || c == 'W')
+			if (c == UP)
 				Snake_SetDirection(&snake, 4);
-			else if (c == 's' || c == 'S')
+			else if (c == DOWN)
 				Snake_SetDirection(&snake, 2);
-			else if (c == 'a' || c == 'A')
+			else if (c == LEFT)
 				Snake_SetDirection(&snake, 1);
-			else if (c == 'd' || c == 'D')
+			else if (c == RIGHT)
 				Snake_SetDirection(&snake, 3);
       
 			// Exit Input
-			if ((int)c == 27 /* Escape */)
+			if (c == ESC /* Escape */)
 				break;
 		}
 
@@ -320,7 +433,7 @@ int main()
 			snake.head->nextLocation.y = MAP_Y;
 
 		// Check if Snake head colliding with any body part
-		SnakeBodyPart* p = snake.head->nextPart;
+		p = snake.head->nextPart;
 		while (p)
 		{
 			if (isEqual(snake.head->location, p->location))
@@ -338,8 +451,9 @@ int main()
 
 		// Points text
 		setcolor(LIGHTBLUE);
-		char pointsStr[32];
-		snprintf(pointsStr, 32, "Points: %d", snake.noOfParts);
+		settextstyle(BOLD_FONT, 0, 12);
+		itoa(snake.noOfParts, pointsStr+8, 10);
+		//snprintf(pointsStr, 32, "Points: %d", snake.noOfParts);
 		outtext(pointsStr);
 
 		// Targeting 2 FPS for simplicity
@@ -347,7 +461,7 @@ int main()
 	}
 
 	// Store final score to display
-	int score = snake.noOfParts;
+	score = snake.noOfParts;
 
 	// Destroy snake
 	Snake_Destroy(&snake);
@@ -363,12 +477,11 @@ int main()
 	setcolor(YELLOW);
 	settextstyle(BOLD_FONT, 0, 8);
 	settextjustify(CENTER_TEXT, CENTER_TEXT);
-	char gameOverTxt[] = "Game Over!";
 	outtextxy(MAP_STEP*MAP_X/2, MAP_STEP*MAP_Y/2, gameOverTxt);
 
 	// Score text
-	char scoreTxt[32];
-	snprintf(scoreTxt, 32, "Your Final score: %d", score);
+	itoa(score, scoreTxt+18, 10);
+	//snprintf(scoreTxt, 32, "Your Final score: %d", score);
 	settextstyle(BOLD_FONT, 0, 2);
 	settextjustify(CENTER_TEXT, CENTER_TEXT);
 	outtextxy(MAP_STEP*MAP_X/2, MAP_STEP*MAP_Y/2+MAP_STEP, scoreTxt);
@@ -377,14 +490,12 @@ int main()
 	setcolor(GREEN);
 	settextstyle(BOLD_FONT, 0, 2);
 	settextjustify(CENTER_TEXT, BOTTOM_TEXT);
-	char exitTxt[] = "Press any key to exit";
 	outtextxy(MAP_STEP*MAP_X/2, MAP_STEP*MAP_Y-MAP_STEP, exitTxt);
 
 	// Credits text
 	setcolor(LIGHTBLUE);
 	settextstyle(BOLD_FONT, 0, 2);
 	settextjustify(RIGHT_TEXT, BOTTOM_TEXT);
-	char creditTxt[] = "Made by Avnish Kirnalli.";
 	outtextxy(MAP_STEP*MAP_X, MAP_STEP, creditTxt);
 
 	while (kbhit()) 
@@ -393,6 +504,6 @@ int main()
 	}
 
 	while (!kbhit()); // Wait till user presses a key
-	
-	return 0;
+
+	goto MainMenu;
 }
